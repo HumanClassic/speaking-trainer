@@ -1,9 +1,9 @@
-const CACHE_NAME = 'english-speaking-cache-v5';
+const CACHE_NAME = 'english-speaking-cache-v6';
 const urlsToCache = [
   './',
-  './index.html',
-  './styles.css',
-  './app.js',
+  './index.html?v=v6',
+  './styles.css?v=v6',
+  './app.js?v=v6',
   './manifest.json'
 ];
 

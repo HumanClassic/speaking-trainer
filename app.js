@@ -82,9 +82,9 @@ if (isInApp) {
 
 // ====== 초기화 코어 ======
 document.addEventListener('DOMContentLoaded', () => {
-  // 서비스 워커 등록 (PWA의 근간)
+  // 서비스 워커 등록 (PWA의 근간) - v6 캐시버스터 부여
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW등록 실패', err));
+    navigator.serviceWorker.register('./sw.js?v=v6').catch(err => console.log('SW등록 실패', err));
 
     // 최신 코드가 백그라운드 배포되었을 때 사용자의 앱을 자동 새로고침 (강제종료 불필요)
     let refreshing = false;
