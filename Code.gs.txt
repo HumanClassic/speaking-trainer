@@ -1,0 +1,71 @@
+/**
+ * 🔒 스피킹 트레이너 웹 앱 API (Server Side)
+ * - Vercel(또는 외부 웹앱)에서 fetch()로 데이터를 요청받아 JSON 반환 담당
+ */
+
+// ▼▼▼ [설정] 카페 공지사항에 올릴 비밀번호를 여기서 정하세요 ▼▼▼
+const APP_PASSWORD = "stella111"; 
+// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+/**
+ * 외부(Vercel 등)에서 GET 요청을 받을 때 실행되는 함수
+ * 예시 호출 URL: https://script.google.com/macros/s/.../exec?password=stella369
+ */
+function doGet(e) {
+  // CORS 프리플라이트를 피하기 위한 범용적인 헤더 및 JSON 응답 반환
+  
+  // 1. 파라미터에서 비밀번호 추출
+  const inputPassword = e.parameter.password;
+  
+  // 2. 비밀번호 검사
+  if (inputPassword !== APP_PASSWORD) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: "비밀번호가 틀렸습니다. 카페 공지사항을 확인하세요."
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  try {
+    // 3. 모든 시트(탭) 데이터 가져오기
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const sheets = spreadsheet.getSheets();
+    
+    let allData = [];
+    let globalIndex = 0; // 고유 번호 부여를 위한 인덱스
+    
+    for (let i = 0; i < sheets.length; i++) {
+        const sheet = sheets[i];
+        const sheetName = sheet.getName();
+        const lastRow = sheet.getLastRow();
+        
+        // 데이터가 없는 시트는 건너뜀
+        if (lastRow < 5) continue;
+        
+        // A열부터 8칸(H열)을 가져오기
+        const range = sheet.getRange(5, 1, lastRow - 4, 8).getValues();
+        
+        const sheetData = range.map(row => {
+            return {
+                id: globalIndex++, // 각 카드 고유 번호
+                subject: sheetName, // 추가됨: 탭 이름 (과목명)
+                category: row[0],   // 챕터명
+                korean: row[2],     // 한국어
+                english: row[7]     // 영어
+            };
+        }).filter(item => item.english !== "" && item.korean !== ""); // 빈 줄 제거
+        
+        allData = allData.concat(sheetData);
+    }
+
+    // 4. 결합된 데이터를 JSON 포맷으로 변환하여 반환
+    return ContentService.createTextOutput(JSON.stringify({ status: "success", data: allData }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    // 에러 발생 시 처리
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: "구글 시트 데이터를 가져오는 중 오류가 발생했습니다: " + error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}

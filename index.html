@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <script>
+    (function () {
+      var ua = navigator.userAgent.toLowerCase();
+      var targetUrl = window.location.href;
+
+      var isKakao = ua.indexOf('kakaotalk') > -1;
+      var isInstagram = ua.indexOf('instagram') > -1;
+      var isFacebook = ua.indexOf('fbav') > -1 || ua.indexOf('fban') > -1;
+      var isLine = ua.indexOf('line') > -1;
+
+      var isAndroid = ua.indexOf('android') > -1;
+      var isIOS = ua.match(/iphone|ipad|ipod/i);
+
+      if (isKakao || isInstagram || isFacebook || isLine) {
+        if (isAndroid) {
+          window.location.href = 'intent://' + targetUrl.replace(/https?:\/\//i, '') + '#Intent;scheme=https;package=com.android.chrome;end';
+        } else if (isKakao && isIOS) {
+          window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(targetUrl);
+        }
+        // iOS SafariFallback (Instagram/Facebook) doesn't have a reliable automatic escape scheme.
+        // It requires user manual action, which could be handled by rendering a fallback UI if needed later.
+      }
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4f46e5">
+  <title>스피킹 트레이너</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="./manifest.json">
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon" href="./icon-192.png">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+
+  <!-- 전역 로딩 스피너 -->
+  <div id="global-loader">
+    <div class="spinner"></div>
+    <div id="loader-text" style="font-weight: 600; color: #4f46e5;">데이터를 불러오는 중입니다...</div>
+  </div>
+
+  <div class="container">
+
+    <!-- PWA 설치 및 헤더 바 -->
+    <header class="app-header">
+      <h1>
+        <img src="./icon-192.png" alt="회사 로고" class="header-logo">
+        <span class="gradient-text">스피킹 트레이너</span>
+      </h1>
+      <button id="install-btn">📲 앱 설치하기</button>
+    </header>
+
+    <!-- 로그인 화면 -->
+    <section id="login-screen">
+      <div class="auth-icon">🔒</div>
+      <h2 class="auth-title">회원 전용 입장</h2>
+      <p class="auth-subtitle">카페 공지사항의 비밀번호를 입력하세요.</p>
+
+      <input type="password" id="passwordInput" placeholder="비밀번호 입력" />
+      <button id="loginBtn" class="btn-primary">시작하기</button>
+
+      <a href="https://naver.me/x3cy7YHh" target="_blank"
+        style="margin-top: 20px; color: #6b7280; font-size: 0.9rem; text-decoration: underline;">📢 비밀번호 확인하러 가기</a>
+    </section>
+
+    <!-- 스피킹 학습 메인 화면 -->
+    <section id="app-screen" style="display: none;">
+
+      <div class="controls-bar">
+        <select id="subjectSelect" class="filter-select">
+          <option value="all">📚 전체 과목 보기</option>
+        </select>
+        <select id="chapterSelect" class="filter-select">
+          <option value="all">📂 전체 챕터 보기</option>
+        </select>
+        <div class="progress-badge" id="progressDisplay">0%</div>
+      </div>
+
+      <!-- 리스트 렌더링 영역 -->
+      <div id="list-container">
+        <!-- JS로 동적 생성됨 -->
+      </div>
+
+    </section>
+
+  </div>
+
+  <!-- App Logic -->
+  <script src="./app.js"></script>
+</body>
+
+</html>

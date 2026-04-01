@@ -1,0 +1,21 @@
+{
+  "name": "생활영어 스피킹 파트너",
+  "short_name": "생활영어",
+  "description": "언제 어디서나 스피킹 무한 반복 학습이 가능한 내 손안의 영어 파트너",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
