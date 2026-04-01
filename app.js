@@ -21,37 +21,63 @@ let globalTTSMsg = null; // 원어민 TTS 메시지 객체
 let deferredPrompt;
 const installBtn = document.getElementById('install-btn');
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  // 기본 팝업 뜨는 것 방지 (우리가 만든 버튼으로 제어하기 위해)
-  e.preventDefault();
-  deferredPrompt = e;
+// (신규) 인앱 브라우저 판별 및 탈출(Fallback) 렌더링
+const ua = navigator.userAgent.toLowerCase();
+const isKakao = ua.indexOf('kakaotalk') > -1;
+const isInstagram = ua.indexOf('instagram') > -1;
+const isFacebook = ua.indexOf('fbav') > -1 || ua.indexOf('fban') > -1;
+const isLine = ua.indexOf('line') > -1;
+const isInApp = isKakao || isInstagram || isFacebook || isLine;
+const targetUrl = window.location.href;
 
-  // 설치 가능한 환경이고, 아직 설치가 안 되었다면 버튼 보이기
+if (isInApp) {
+  // 인앱 웹뷰: 이벤트 기다릴 필요 없이 즉시 설치 버튼 탈취(Hijack) 작동
   if (installBtn && !window.matchMedia('(display-mode: standalone)').matches) {
-    installBtn.style.display = 'block';
+    installBtn.innerText = '🚀 브라우저로 열기'; // 텍스트 강제 변조
+    installBtn.style.display = 'block'; // 버튼 강제 노출
+
+    // 클릭 시 (사용자 터치 액션 동반) 강제 탈출 스킴 호출!
+    installBtn.addEventListener('click', () => {
+      const isAndroid = ua.indexOf('android') > -1;
+      const isIOS = ua.match(/iphone|ipad|ipod/i);
+
+      if (isAndroid) {
+        window.location.href = 'intent://' + targetUrl.replace(/https?:\/\//i, '') + '#Intent;scheme=https;package=com.android.chrome;end';
+      } else if (isKakao && isIOS) {
+        window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(targetUrl);
+      } else {
+        alert('우측 상단 혹은 하단의 툴바 메뉴에서 [다른 브라우저로 열기(Safari)]를 선택해 주세요!');
+      }
+    });
   }
-});
-
-// 설치 버튼 클릭 처리
-if (installBtn) {
-  installBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt(); // 브라우저 고유 설치 팝업 호출
-
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      console.log('User accepted the install prompt');
-      installBtn.style.display = 'none'; // 성공적으로 수락하면 숨김
+} else {
+  // 일반 브라우저(Chrome, Safari 등): 정상적인 순정 PWA 설치 이벤트 발동
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (installBtn && !window.matchMedia('(display-mode: standalone)').matches) {
+      installBtn.style.display = 'block';
     }
-    deferredPrompt = null;
+  });
+
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+        installBtn.style.display = 'none';
+      }
+      deferredPrompt = null;
+    });
+  }
+
+  window.addEventListener('appinstalled', () => {
+    console.log('PWA was installed');
+    if (installBtn) installBtn.style.display = 'none';
   });
 }
-
-// 설치가 완료되면 감지하여 버튼 숨김
-window.addEventListener('appinstalled', () => {
-  console.log('PWA was installed');
-  if (installBtn) installBtn.style.display = 'none';
-});
 
 
 // ====== 초기화 코어 ======

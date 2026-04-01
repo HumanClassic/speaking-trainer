@@ -8,6 +8,7 @@
 - **보안/편의 결합형 자동로그인 (Auto-Login):** `LocalStorage`에 성공한 패스워드를 기억하되, 세션 유효성(비교) 검사는 구글 서버에 위임. 서버 비번 갱신 시 기존 로컬 암호 파기 및 수동 로그인 강제.
 - **PingPong Sequencer 지연 상수화:** 원어민 TTS 및 사용자 음성 재생 간격(Delay)을 단일 상수(`SEQUENCE_DELAY_MS`)로 통제하여 티키타카(Tiki-Taka) 대화 이질감 제거.
 - **인앱 브라우저 강제 탈출 (Auto-Escape) 아키텍처:** 카카오톡, 인스타그램 등 인앱 웹뷰(WebView)에서 PWA 설치가 OS보안 정책상 원천 차단되는 악성 UX를 돌파하기 위해, `index.html` 렌더링 극초단에 User Agent를 스니핑하여 안드로이드(`intent://`), iOS 카톡(`kakaotalk://...`) 스킴으로 외부 시스템 브라우저를 강제 오픈시키도록 설계함.
+- **인앱 브라우저 앱 설치 버튼 Fallback (단축 탈출) 로직:** OS가 Auto-escape를 무단 팝업(Silent Block)으로 차단하는 것에 대비하여, `app.js`에서 인앱 환경일 경우 PWA 권한 이벤트를 기다리지 않고 '앱 설치하기' 버튼을 '🚀 브라우저로 열기'로 강제 노출/변조시킴. 터치(User Gesture) 시 즉시 `intent://` 스킴을 트리거하여 샌드박스를 확정 탈출함.
 
 ## 🕵️ Root-causes
 - **녹음/재생 불가 증상:** 최근 강화된 브라우저(Apple Safari, Chrome 등)의 샌드박스 정책으로 인하여 `iframe` 기반 내부에서 서비스되는 GAS 웹앱에서 미디어/스트림 통신 권한(MediaRecorder API) 접근이 원천 차단되었기 때문. 
