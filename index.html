@@ -3,30 +3,6 @@
 
 <head>
   <meta charset="UTF-8">
-  <script>
-    (function () {
-      var ua = navigator.userAgent.toLowerCase();
-      var targetUrl = window.location.href;
-
-      var isKakao = ua.indexOf('kakaotalk') > -1;
-      var isInstagram = ua.indexOf('instagram') > -1;
-      var isFacebook = ua.indexOf('fbav') > -1 || ua.indexOf('fban') > -1;
-      var isLine = ua.indexOf('line') > -1;
-
-      var isAndroid = ua.indexOf('android') > -1;
-      var isIOS = ua.match(/iphone|ipad|ipod/i);
-
-      if (isKakao || isInstagram || isFacebook || isLine) {
-        if (isAndroid) {
-          window.location.href = 'intent://' + targetUrl.replace(/https?:\/\//i, '') + '#Intent;scheme=https;package=com.android.chrome;end';
-        } else if (isKakao && isIOS) {
-          window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(targetUrl);
-        }
-        // iOS SafariFallback (Instagram/Facebook) doesn't have a reliable automatic escape scheme.
-        // It requires user manual action, which could be handled by rendering a fallback UI if needed later.
-      }
-    })();
-  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#4f46e5">
   <title>스피킹 트레이너</title>
