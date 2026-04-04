@@ -31,16 +31,24 @@ const isInApp = isKakao || isInstagram || isFacebook || isLine;
 const targetUrl = window.location.href;
 
 if (isInApp) {
-  // 인앱 웹뷰: 이벤트 기다릴 필요 없이 즉시 설치 버튼 탈취(Hijack) 작동
+  // 모바일 기기별 강제 탈출 스킴(Intent) 자동 실행 (Auto-Escape)
+  const isAndroid = ua.indexOf('android') > -1;
+  const isIOS = ua.match(/iphone|ipad|ipod/i);
+  
+  if (isAndroid) {
+    window.location.href = 'intent://' + targetUrl.replace(/https?:\/\//i, '') + '#Intent;scheme=https;package=com.android.chrome;end';
+  } else if (isKakao && isIOS) {
+    window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(targetUrl);
+  }
+
+  // 인앱 웹뷰: OS 정책으로 자동 탈출이 차단(Silent Block)될 경우를 완벽 대비하여,
+  // 이벤트 기다릴 필요 없이 즉시 설치 버튼 탈취(Hijack) 작동 (Fallback Button)
   if (installBtn && !window.matchMedia('(display-mode: standalone)').matches) {
     installBtn.innerText = '🚀 브라우저로 열기'; // 텍스트 강제 변조
     installBtn.style.display = 'block'; // 버튼 강제 노출
 
-    // 클릭 시 (사용자 터치 액션 동반) 강제 탈출 스킴 호출!
+    // 클릭 시 (사용자 터치 액션 동반) 강제 탈출 스킴 재호출!
     installBtn.addEventListener('click', () => {
-      const isAndroid = ua.indexOf('android') > -1;
-      const isIOS = ua.match(/iphone|ipad|ipod/i);
-
       if (isAndroid) {
         window.location.href = 'intent://' + targetUrl.replace(/https?:\/\//i, '') + '#Intent;scheme=https;package=com.android.chrome;end';
       } else if (isKakao && isIOS) {
