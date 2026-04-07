@@ -41,18 +41,58 @@ function doGet(e) {
         // 데이터가 없는 시트는 건너뜀
         if (lastRow < 5) continue;
         
-        // A열부터 8칸(H열)을 가져오기
-        const range = sheet.getRange(5, 1, lastRow - 4, 8).getValues();
+        const rowsCount = lastRow - 4;
         
-        const sheetData = range.map(row => {
-            return {
+        // A열부터 8칸(H열) 평문 가져오기 (기존 호환)
+        const rangeValues = sheet.getRange(5, 1, rowsCount, 8).getValues();
+        // H열(영어)의 텍스트 색상 서식만 별도로 파싱하기 위해 RichText 객체 가져오기
+        const richTextRange = sheet.getRange(5, 8, rowsCount, 1).getRichTextValues();
+        
+        const sheetData = [];
+        for (let r = 0; r < rowsCount; r++) {
+            const row = rangeValues[r];
+            const category = row[0];
+            const korean = row[2] ? String(row[2]) : "";
+            const englishPlain = row[7] ? String(row[7]).trim() : "";
+            
+            // 데이터가 없는 빈 줄은 스킵
+            if (englishPlain === "" || korean === "") continue;
+
+            const richTextObj = richTextRange[r][0];
+            let englishHtml = "";
+            
+            if (richTextObj && richTextObj.getRuns) { // RichTextValue 방어코드
+                const runs = richTextObj.getRuns();
+                runs.forEach(run => {
+                    const textChunk = run.getText();
+                    if (!textChunk) return;
+                    
+                    const textStyle = run.getTextStyle();
+                    const color = textStyle ? textStyle.getForegroundColor() : null;
+                    
+                    // 시트 작성 시 포함된 특수문자 HTML 자동 이스케이프
+                    const safeText = textChunk.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    
+                    // 검은색(#000000)이 아니면 색상 span 렌더링 유지
+                    if (color && color !== "#000000") {
+                        englishHtml += `<span style="color:${color}; font-weight:bold;">${safeText}</span>`;
+                    } else {
+                        englishHtml += safeText;
+                    }
+                });
+            } else {
+                englishHtml = englishPlain.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+            
+            sheetData.push({
                 id: globalIndex++, // 각 카드 고유 번호
                 subject: sheetName, // 추가됨: 탭 이름 (과목명)
-                category: row[0],   // 챕터명
-                korean: row[2],     // 한국어
-                english: row[7]     // 영어
-            };
-        }).filter(item => item.english !== "" && item.korean !== ""); // 빈 줄 제거
+                category: category,   // 챕터명
+                korean: korean,     // 한국어
+                english: englishPlain, // 기존 호환: 평문(TTS 및 검색결과용)
+                englishHtml: englishHtml // 전용: 서식이 포함된 html (화면 렌더링용)
+            });
+        }
         
         allData = allData.concat(sheetData);
     }

@@ -245,8 +245,12 @@ function renderList() {
     const isCompleted = userProgress[item.id] ? 'completed' : '';
     const isChecked = userProgress[item.id] ? 'checked' : '';
 
-    // XSS 방지 처리
+    // XSS 방지 처리: TTS 및 핑퐁 로직(오디오 엔진)에 주입될 무결점 평문
     const safeEngText = escapeHTML(item.english || "");
+    
+    // 시각적 렌더링용: 서버에서 이스케이프 후 <span> 색상 태그를 입힌 HTML (없으면 평문 폴백)
+    const renderEngHtml = item.englishHtml || safeEngText;
+
     const safeSubject = escapeHTML(item.subject || "");
     const safeCategory = escapeHTML(item.category || "-");
 
@@ -257,7 +261,7 @@ function renderList() {
         
         <div class="english-section">
           <button class="btn-toggle-answer" id="toggle-ans-${item.id}" onclick="toggleAnswer(${item.id})">👀 정답 보기</button>
-          <div class="english-text" id="eng-text-${item.id}">${safeEngText}</div>
+          <div class="english-text" id="eng-text-${item.id}">${renderEngHtml}</div>
         </div>
 
         <div class="action-buttons">
