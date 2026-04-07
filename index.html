@@ -52,15 +52,15 @@
     <!-- 스피킹 학습 메인 화면 -->
     <section id="app-screen" style="display: none;">
 
-      <div class="controls-bar">
+      <div class="filter-wrapper controls-bar">
         <select id="subjectSelect" class="filter-select">
           <option value="all">📚 전체 과목 보기</option>
         </select>
         <select id="chapterSelect" class="filter-select">
           <option value="all">📂 전체 챕터 보기</option>
         </select>
-        <div class="progress-badge" id="progressDisplay">0%</div>
       </div>
+      <div class="progress-badge" id="progressDisplay" style="margin-bottom: 20px;">진도율: 0%</div>
 
       <!-- 리스트 렌더링 영역 -->
       <div id="list-container">

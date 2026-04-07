@@ -176,11 +176,27 @@ input[type="password"]:focus {
 }
 
 /* --- App Content --- */
+.filter-wrapper {
+  position: sticky;
+  top: -20px; /* 컨테이너의 기본 padding-top 상쇄 */
+  z-index: 50;
+  margin-left: -20px;
+  margin-right: -20px;
+  margin-bottom: 20px;
+  padding: 20px 20px 15px 20px;
+  background: rgba(243, 244, 246, 0.85); /* 배경색과 맞춤 */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+}
+
 .controls-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 20px;
   align-items: center;
 }
 
