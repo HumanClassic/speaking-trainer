@@ -268,7 +268,7 @@ select.filter-select:focus {
   font-family: 'Outfit', sans-serif;
   font-size: 1.15rem;
   font-weight: 600;
-  color: var(--primary);
+  color: var(--text-main);
   display: none;
   margin-bottom: 12px;
   animation: fadeIn 0.3s ease;
