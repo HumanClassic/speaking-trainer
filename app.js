@@ -215,19 +215,46 @@ async function handleLogin() {
 }
 
 async function performAuth(pwd, isManual) {
-  showLoader();
+  const cachedDataStr = localStorage.getItem('delsseo_app_data_v2');
+  let hasCachedData = false;
+
+  // SWR 핵심 1: 자동 로그인 방식일 땐 로컬 캐시가 존재하면 서버를 기다리지 않고 즉각 렌더링 (로딩 대기시간 0초)
+  if (!isManual && cachedDataStr) {
+    try {
+      appData = JSON.parse(cachedDataStr);
+      if (appData && appData.length > 0) {
+        hasCachedData = true;
+        populateSubjects();
+        populateChapters();
+        getEl('login-screen').style.display = 'none';
+        getEl('app-screen').style.display = 'block';
+        renderList();
+        updateProgressUI();
+      }
+    } catch(e) {
+      console.log('Cache parse failed', e);
+    }
+  }
+
+  // 통신 대기용 파란색 로딩 바는 '수동 로그인' 클릭 시점 또는 '캐시가 아예 없을 때'만 한정적으로 표출
+  if (!hasCachedData) {
+    showLoader();
+  }
 
   try {
-    // 🔥 Vercel 프론트엔드 -> Google Apps Script API 로 GET 요청 (CORS)
+    // SWR 핵심 2: 화면을 띄워둔 채로 모바일 백그라운드에서 교신 진행 (Stale-While-Revalidate)
     const url = `${GAS_API_URL}?password=${encodeURIComponent(pwd)}`;
     const response = await fetch(url);
     const result = await response.json();
 
     if (result.status === "error") {
-      // 인증 실패. 만약 자동 로그인(백그라운드) 중이었다면, 서버 비번이 바뀐 상황임.
       if (!isManual) {
-        localStorage.removeItem(AUTH_STORE_KEY); // 더 이상 동작하지 않는 낡은 세션 키를 로컬 창고에서 즉시 파기
-        alert("원장님이 서버의 비밀번호를 변경하셨습니다. 카페 공지사항 확인 후 새로운 비밀번호로 다시 로그인해 주세요.");
+        localStorage.removeItem(AUTH_STORE_KEY); // 인증 키 파기
+        localStorage.removeItem('delsseo_app_data_v2'); // 앱 캐시 데이터 원천 파기
+        alert("원장님이 서버의 비밀번호를 변경하셨습니다. 화면이 초기화 되오니, 카페 공지사항 확인 후 새로운 비밀번호로 로그인해 주세요.");
+        if (hasCachedData) {
+          window.location.reload(); // 잘못 그려진 낡은 캐시 화면 강제 종료 및 정화
+        }
       } else {
         alert(result.message);
       }
@@ -235,28 +262,42 @@ async function performAuth(pwd, isManual) {
       return;
     }
 
-    // 성공적으로 데이터 로드
-    appData = result.data;
+    const newDataString = JSON.stringify(result.data);
 
-    // 접속에 성공한 정상 비밀번호이므로, 폰(PC)의 로컬 스토리지에 캐싱 (강력 자동 로그인 구현)
-    localStorage.setItem(AUTH_STORE_KEY, pwd);
+    if (hasCachedData) {
+      // 1-1. 화면을 이미 0초 만에 띄웠기 때문에, 그냥 몰래 변동점만 대조 연산
+      const oldDataString = JSON.stringify(appData);
+      if (newDataString !== oldDataString) {
+        latestFetchedData = result.data;
+        const toast = document.getElementById('update-toast');
+        if (toast) toast.classList.add('visible'); // 시트 내용이 변경되었을 때만 예쁜 토스트 표출!
+        localStorage.setItem('delsseo_app_data_v2', newDataString); // 로컬 창고 백그라운드 갱신
+      }
+    } else {
+      // 1-2. 캐시가 없었거나 최초 수동 진입 상황: 다운로드 완료 직후 정공법으로 화면을 렌더링하고 로컬 저장소 적재
+      appData = result.data;
+      localStorage.setItem(AUTH_STORE_KEY, pwd);
+      localStorage.setItem('delsseo_app_data_v2', newDataString);
 
-    // 과목 및 챕터 목록 생성
-    populateSubjects();
-    populateChapters();
-
-    // 화면 전환
-    getEl('login-screen').style.display = 'none';
-    getEl('app-screen').style.display = 'block';
-
-    renderList();
-    updateProgressUI();
+      populateSubjects();
+      populateChapters();
+      getEl('login-screen').style.display = 'none';
+      getEl('app-screen').style.display = 'block';
+      renderList();
+      updateProgressUI();
+    }
 
   } catch (err) {
     console.error(err);
-    alert("데이터를 서버에서 가져오지 못했습니다. 마우스 드래그로 최신 app.js 가 제대로 업로드 되었는지 확인하세요!");
+    // 인터넷 끊김 등 통신 에러 발생 시:
+    // 이미 캐시로 화면을 띄워서 공부 중이었다면 에러 창 띄우지 않고 묵묵히 오프라인 학습 보장!
+    if (!hasCachedData) {
+      alert("데이터를 서버에서 가져오지 못했습니다. 앱 연결 상태 혹은 와이파이를 확인하세요.");
+    }
   } finally {
-    hideLoader();
+    if (!hasCachedData) {
+      hideLoader();
+    }
   }
 }
 
