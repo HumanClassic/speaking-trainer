@@ -122,6 +122,75 @@ document.addEventListener('DOMContentLoaded', () => {
     currentChapter = e.target.value;
     renderList();
   });
+
+  // 핫리로드 토스트 클릭 이벤트
+  const updateToast = document.getElementById('update-toast');
+  if (updateToast) {
+    updateToast.addEventListener('click', () => {
+      if (latestFetchedData) {
+        appData = latestFetchedData;
+        
+        // 사용자가 보던 과목/챕터 필터 상태를 최대한 유지
+        const prevSubject = currentSubject;
+        const prevChapter = currentChapter;
+        
+        populateSubjects();
+        // 선택했던 과목이 새 데이터에도 존재하면 유지
+        const subjectEl = document.getElementById('subjectSelect');
+        if ([...subjectEl.options].some(opt => opt.value === prevSubject)) {
+          currentSubject = prevSubject;
+          subjectEl.value = prevSubject;
+        } else {
+          currentSubject = subjectEl.options[0].value;
+        }
+
+        populateChapters();
+        // 선택했던 챕터가 새 데이터에도 존재하면 유지
+        const chapterEl = document.getElementById('chapterSelect');
+        if ([...chapterEl.options].some(opt => opt.value === prevChapter)) {
+          currentChapter = prevChapter;
+          chapterEl.value = prevChapter;
+        } else {
+          currentChapter = 'all';
+        }
+
+        renderList();
+        updateProgressUI();
+        
+        updateToast.classList.remove('visible');
+        latestFetchedData = null;
+      }
+    });
+  }
+});
+
+// ====== 비동기 핫리로드 (Background Sync) ======
+let latestFetchedData = null;
+
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible') {
+    const savedPwd = localStorage.getItem(AUTH_STORE_KEY);
+    if (!savedPwd || appData.length === 0) return;
+
+    try {
+      const url = `${GAS_API_URL}?password=${encodeURIComponent(savedPwd)}`;
+      const response = await fetch(url);
+      const result = await response.json();
+      
+      if (result.status !== "error") {
+        const newDataString = JSON.stringify(result.data);
+        const oldDataString = JSON.stringify(appData);
+
+        if (newDataString !== oldDataString) {
+          latestFetchedData = result.data;
+          const toast = document.getElementById('update-toast');
+          if (toast) toast.classList.add('visible');
+        }
+      }
+    } catch(e) {
+      console.log('Background sync failed:', e);
+    }
+  }
 });
 
 const getEl = id => document.getElementById(id);

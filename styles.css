@@ -433,3 +433,38 @@ select.filter-select:focus {
     display: none !important;
   }
 }
+
+/* --- Update Toast (Hot Reload) --- */
+.update-toast {
+  position: fixed;
+  bottom: -100px; /* 숨김 상태 */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(16, 185, 129, 0.95); /* var(--secondary) 기반 약간 투명 */
+  color: white;
+  padding: 14px 24px;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  cursor: pointer;
+  transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.update-toast.visible {
+  bottom: 30px; /* 화면 하단에 플로팅 노출 */
+  animation: floatToast 3s ease-in-out infinite;
+}
+
+@keyframes floatToast {
+  0% { transform: translateX(-50%) translateY(0px); }
+  50% { transform: translateX(-50%) translateY(-5px); }
+  100% { transform: translateX(-50%) translateY(0px); }
+}
